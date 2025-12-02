@@ -25,18 +25,19 @@ public:
 };
 
 Swarm::Swarm(int d, int p, double w, double c1, double c2, vector< function<double(const vector<double>&)> > objectives): w(w), c1(c1), c2(c2), objectives(objectives) {
+  seed = mt19937(time(nullptr));
   swarm.reserve(p);
-  best_fitness = INT_MAX;
+  best_fitness = numeric_limits<double>::infinity();
   for (int i = 0; i < p; i++) {
-    swarm.emplace_back(d);
-    swarm[i].best_fitness = fitness(swarm[i].position);
+    swarm.emplace_back(d, -10.0, 10.0, seed, [this](const vector<double>& pos) { return fitness(pos); });
+
     if (swarm[i].best_fitness < best_fitness) {
       best_fitness = swarm[i].best_fitness;
       g_best = swarm[i].p_best;
     }
+
   }
 
-  seed = mt19937(time(nullptr));
 }
 
 double Swarm::fitness(const vector<double>& position) {
