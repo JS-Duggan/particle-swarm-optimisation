@@ -44,8 +44,14 @@ Particle::Particle(int d, double lower, double upper, mt19937& gen, const functi
 void Particle::updatePosition(const function<double(const vector<double>&)>& fitness) {
   for (int i = 0; i < dimension; i++) {
     position[i] += velocity[i];
-    if (position[i] < lower) position[i] = lower;
-    else if (position[i] > upper) position[i] = upper;
+    if (position[i] < lower) {
+      position[i] = lower + (lower - velocity[i]);
+      velocity[i] *= -1;
+    }
+    else if (position[i] > upper) {
+      position[i] = upper - (position[i] - upper);
+      velocity[i] *= -1;
+    }
   }
   double current_fitness = fitness(position);
 
