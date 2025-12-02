@@ -14,12 +14,15 @@ int main() {
 	};
 
 
+	/* 2d f(x, y), 40 particles, 0.7 innertial weight, local and global cognition arre same */
 	Swarm swarm(2, 40, 0.7, 1.4, 1.4, {f1, f2});
 	vector<vector<double>> results;
+
+	/* 100 steps */
 	for (int i = 0; i < 100; i++) {
 		results.push_back(swarm.timeStep());
 	}
-
+	swarm.saveHistory("./pso_results.csv");
 	for (const auto& step : results) {
 		for (double x : step) {
 			cout << x << " ";
