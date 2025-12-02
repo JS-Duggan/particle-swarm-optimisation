@@ -46,11 +46,11 @@ void Particle::updatePosition(const function<double(const vector<double>&)>& fit
     position[i] += velocity[i];
     if (position[i] < lower) {
       position[i] = lower + (lower - velocity[i]);
-      velocity[i] *= -1;
+      velocity[i] = -velocity[i];
     }
     else if (position[i] > upper) {
       position[i] = upper - (position[i] - upper);
-      velocity[i] *= -1;
+      velocity[i] = -velocity[i];
     }
   }
   double current_fitness = fitness(position);
