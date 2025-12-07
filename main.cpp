@@ -38,9 +38,8 @@ int main() {
 
 	/* 100 steps */
 	for (int i = 0; i < 1000; i++) {
-		results.push_back(swarm.timeStep());
+		swarm.timeStep();
 	}
-	swarm.saveHistory("./pso_results.csv");
 	for (const auto& step : results) {
 		for (double x : step) {
 			cout << x << " ";
