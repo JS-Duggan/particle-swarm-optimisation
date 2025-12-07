@@ -12,7 +12,7 @@ struct solution {
   vector<double> position;
   vector<double> fitness;
 
-  solution(int d): position(d), fitness(d) {};
+  solution(int d): position(d) {};
 };
 
 struct Particle {
@@ -91,7 +91,7 @@ void Particle::updateVelocity(double w, double c1, double c2, const vector<doubl
     double local = c1 * dist(gen) * (p_best.position[i] - position[i]);    //local
     double global = c2 * dist(gen) * (g_best[i] - position[i]);   //global 
     velocity[i] = velocity[i] * w + local + global;
-    if (velocity[i] < -vmax) velocity[i] = vmax;
+    if (velocity[i] < -vmax) velocity[i] = -vmax;
     else if (velocity[i] > vmax) velocity[i] = vmax;
   }
 }

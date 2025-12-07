@@ -7,7 +7,7 @@ class Swarm {
 private:
   /* initial conditions */
   vector<solution> pareto_front;
-  vector<vector<vector<double>>> history;
+  vector<vector<solution>> history;
 
   /* parameters */
   int dim;
@@ -41,8 +41,8 @@ Swarm::Swarm(int d, int p, double w, double c1, double c2, vector< function<doub
 }
 
 vector<double> Swarm::fitness(const vector<double>& position) {
-  vector<double> fit(objectives.size());
-
+  vector<double> fit;
+  fit.reserve(objectives.size());
   for (const auto& f : objectives) {
     fit.emplace_back(f(position), 2);
   }
@@ -56,10 +56,10 @@ void Swarm::timeStep() {
     swarm[i].updateVelocity(w, c1, c2, g_best, seed);
     swarm[i].updatePosition();
     updateParticleBest(swarm[i]);
-    history[i].push_back(swarm[i].position);
   }
 
   updateFront();
+  history.push_back(pareto_front);
 }
 
 void Swarm::updateParticleBest(Particle& p) {
@@ -70,7 +70,7 @@ void Swarm::updateParticleBest(Particle& p) {
   bool pbest_dominates = true;
   bool strictly_better_pbest = false;
 
-  for (int i = 0; i < dim; i++) {
+  for (int i = 0; i < current_fitness.size(); i++) {
     /* worse in at least one objective */
     if (current_fitness[i] > p.p_best.fitness[i]) dominates = false;
     if (p.p_best.fitness[i] > current_fitness[i]) pbest_dominates = false;
@@ -102,7 +102,7 @@ bool Swarm::lessCrowded(const vector<double>& a, const vector<double>& b) {
 double Swarm::crowdingDistance(const vector<double>& candidate) {
     double totalCrowding = 0.0;
 
-    for (int m = 0; m < dim; ++m) {
+    for (int m = 0; m < pareto_front[0].fitness.size(); ++m) {
         // Extract objective m values from the Pareto front
         vector<double> objValues;
         for (const auto& s : pareto_front) objValues.push_back(s.fitness[m]);
@@ -174,4 +174,24 @@ void Swarm::updateFront() {
     // Add the non-dominated candidate
     pareto_front.push_back(cand);
   }
+}
+
+vector<double> Swarm::closestFrontier(const vector<double>& position) {
+  double distance = HUGE_VAL;
+  vector<double> point(dim);
+
+  for (const auto& p : pareto_front) {
+    double running = 0.0;
+
+    for (int i = 0; i < dim; i++) {
+      running += pow((position[i] - p.position[i]), 2);
+    }
+
+    if (running < distance) {
+      distance = running;
+      point = p.position;
+    }
+  }
+
+  return point;
 }
