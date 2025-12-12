@@ -2,6 +2,8 @@
 #include <ctime>
 #include <fstream>
 #include <algorithm>
+#include <queue>
+#include <thread>
 
 class Swarm {
 private:
@@ -20,13 +22,14 @@ private:
   vector<double> fitness(const vector<double>& position);
   vector<double> closestFrontier(const vector<double>& position);
   void updateFront();
+  void cleanFront();
+  void parallelTimeStep(int begin, int end);
   void updateParticleBest(Particle& p);
   bool lessCrowded(const vector<double>& a, const vector<double>& b);
   double crowdingDistance(const vector<double>& candidate);
   
   public:
-  vector<solution> pareto_front;
-  vector<vector<solution>> history;
+  deque<solution> pareto_front;
   void timeStep();
   Swarm(int d, int p, double w, double c1, double c2, vector< function<double(const vector<double>&)> > objectives);
 };
@@ -52,16 +55,36 @@ vector<double> Swarm::fitness(const vector<double>& position) {
 }
 
 void Swarm::timeStep() {
-  for (int i = 0; i < swarm.size(); i++) {
+  thread t0(&Swarm::parallelTimeStep, this, 0, 125);
+  thread t1(&Swarm::parallelTimeStep, this, 125, 250);
+  thread t2(&Swarm::parallelTimeStep, this, 250, 375);
+  thread t3(&Swarm::parallelTimeStep, this, 375, 500);
+  thread t4(&Swarm::parallelTimeStep, this, 500, 625);
+  thread t5(&Swarm::parallelTimeStep, this, 625, 750);
+  thread t6(&Swarm::parallelTimeStep, this, 750, 875);
+  thread t7(&Swarm::parallelTimeStep, this, 875, 1000);
+  
+  t0.join(); 
+  t1.join();
+  t2.join();
+  t3.join();
+  t4.join();
+  t5.join();
+  t6.join();
+  t7.join();
+
+  updateFront();
+  cleanFront();
+}
+
+void Swarm::parallelTimeStep(int begin, int end) {
+  for (int i = begin; i < end; i++) {
     vector<double> g_best = closestFrontier(swarm[i].position);
     swarm[i].updateVelocity(w, c1, c2, g_best, seed);
     swarm[i].updatePosition();
     swarm[i].normaliseWeight();
     updateParticleBest(swarm[i]);
   }
-
-  updateFront();
-  history.push_back(pareto_front);
 }
 
 void Swarm::updateParticleBest(Particle& p) {
@@ -176,6 +199,11 @@ void Swarm::updateFront() {
     // Add the non-dominated candidate
     pareto_front.push_back(cand);
   }
+}
+
+void Swarm::cleanFront() {
+  while (pareto_front.size() > 100)
+    pareto_front.pop_front();
 }
 
 vector<double> Swarm::closestFrontier(const vector<double>& position) {

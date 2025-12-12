@@ -4,7 +4,7 @@
 #include <string>
 #include <sstream>
 
-void saveParetoFront(const std::vector<solution>& pareto_front, const std::string& filename) {
+void saveParetoFront(const deque<solution>& pareto_front, const string& filename) {
     std::ofstream file(filename);
     if (!file.is_open()) {
         std::cerr << "Error opening file " << filename << "\n";
