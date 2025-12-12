@@ -1,50 +1,102 @@
 #include "swarm.cpp"
 #include <iostream>
 #include <vector>
+#include <string>
+#include <sstream>
 
-double T2(double z) {
-    return 2.0 * z * z - 1.0;
+void saveParetoFront(const deque<solution>& pareto_front, const string& filename) {
+    std::ofstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Error opening file " << filename << "\n";
+        return;
+    }
+
+    for (const auto& sol : pareto_front) {
+        // Save position
+        for (size_t i = 0; i < sol.position.size(); i++) {
+            file << sol.position[i];
+            if (i != sol.position.size() - 1) file << ",";
+        }
+
+        file << ",";
+
+        // Save fitness
+        for (size_t i = 0; i < sol.fitness.size(); i++) {
+            file << sol.fitness[i];
+            if (i != sol.fitness.size() - 1) file << ",";
+        }
+
+        file << "\n";
+    }
+
+    file.close();
 }
 
-double T3(double z) {
-    return 4.0 * z * z * z - 3.0 * z;
-}
+int main(int argc, char* argv[]) {
 
-double T4(double z) {
-    return 8.0 * z * z * z * z - 8.0 * z * z + 1.0;
-}
+    vector<vector<double>> cov_matrix;
+    vector<double> ret_matrix;
+    ifstream file1(argv[1]);
+    ifstream file2(argv[2]);
+    string line;
+    // Skip the first row
+    getline(file1, line);
+    while (getline(file1, line)) {
+        stringstream ss(line);
+        string cell;
 
-int main() {
-    auto g1 = [](const vector<double>& x) -> double {
-        double t3x = T3(x[0]);
-        double t2y = T2(x[1]);
-        return t3x + t2y;      // g1(x,y) = T3(x) + T2(y)
+        // Skip the first column
+        getline(ss, cell, ',');
+        getline(ss, cell, ',');
+        ret_matrix.push_back(stod(cell));
+    }
+    // Skip the first row
+    getline(file2, line);
+    while (getline(file2, line)) {
+        stringstream ss(line);
+        string cell;
+        vector<double> row;
+
+        // Skip the first column
+        getline(ss, cell, ',');
+
+        // Read the numeric values
+        while (getline(ss, cell, ',')) {
+            row.push_back(stod(cell)); // convert string to double
+        }
+
+        cov_matrix.push_back(row);
+    }
+
+    auto variance = [& cov_matrix](const vector<double>& position) -> double {
+        double variance = 0;
+        for (int i = 0; i < position.size(); i++) {
+            for (int j = i; j < position.size(); j++) {
+                variance += position[i] * position[j] * cov_matrix[i][j];
+            }
+        }
+
+        return variance;
     };
 
-    auto g2 = [](const vector<double>& x) -> double {
-        double t4x = T4(x[0]);
-        double t3y = T3(x[1]);
-        return t4x - t3y;      // g2(x,y) = T4(x) - T3(y)
+    auto returns = [& ret_matrix](const vector<double>& position) -> double {
+        double r = 0;
+        for (int i = 0; i < position.size(); i++) {
+            r += position[i] * ret_matrix[i];
+        }
+
+        return -r;
     };
-
-    auto g3 = [](const vector<double>& x) -> double {
-        return x[0] + x[1] - 1.2;    // g3(x,y) = x + y - 1.2
-    };
-
-
 	/* 2d f(x, y), 40 particles, 0.7 innertial weight, local and global cognition arre same */
-	Swarm swarm(2, 40, 0.7, 1.4, 1.4, {g1, g2, g3});
+	Swarm swarm(505, 1000, 0.7, 1.4, 1.4, {returns, variance});
 	vector<vector<double>> results;
 
 	/* 100 steps */
 	for (int i = 0; i < 1000; i++) {
-		results.push_back(swarm.timeStep());
+        cout << "Step: " << i << endl;
+		swarm.timeStep();
 	}
-	swarm.saveHistory("./pso_results.csv");
-	for (const auto& step : results) {
-		for (double x : step) {
-			cout << x << " ";
-		}
-		cout << endl;
-	}
+
+    saveParetoFront(swarm.pareto_front, "results.csv");
+
 }
