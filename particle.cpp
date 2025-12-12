@@ -50,7 +50,7 @@ Particle::Particle(int d, double lower, double upper, mt19937& gen, const functi
   }
   p_best.fitness = fitness(position);
   p_best.position = position;
-  vmax = (upper - lower) * 0.2;
+  vmax = (upper - lower) * 0.1;
 }
 
 /** 

@@ -6,16 +6,14 @@
 class Swarm {
 private:
   /* initial conditions */
-  vector<solution> pareto_front;
-  vector<vector<solution>> history;
-
+  
   /* parameters */
   int dim;
   double w;
   double c1;
   double c2;
   mt19937 seed;
-
+  
   /* objectives to optimise for */
   vector<Particle> swarm;
   vector< function<double(const vector<double>&)> > objectives;
@@ -25,8 +23,10 @@ private:
   void updateParticleBest(Particle& p);
   bool lessCrowded(const vector<double>& a, const vector<double>& b);
   double crowdingDistance(const vector<double>& candidate);
-
-public:
+  
+  public:
+  vector<solution> pareto_front;
+  vector<vector<solution>> history;
   void timeStep();
   Swarm(int d, int p, double w, double c1, double c2, vector< function<double(const vector<double>&)> > objectives);
 };
@@ -45,7 +45,7 @@ vector<double> Swarm::fitness(const vector<double>& position) {
   vector<double> fit;
   fit.reserve(objectives.size());
   for (const auto& f : objectives) {
-    fit.emplace_back(f(position), 2);
+    fit.emplace_back(f(position));
   }
 
   return fit;
