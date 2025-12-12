@@ -29,6 +29,7 @@ struct Particle {
   void updateVelocity(double w, double c1, double c2, const vector<double>& g_best, mt19937& gen);
   void updatePosition();
   void updateBestPosition(vector<double> position, vector<double> fitness);
+  void normaliseWeight();
 };
 
 /**
@@ -96,4 +97,17 @@ void Particle::updateVelocity(double w, double c1, double c2, const vector<doubl
   }
 }
 
+
+void Particle::normaliseWeight() {
+  double sum = accumulate(position.begin(), position.end(), 0.0);
+
+  if (sum == 0) {
+    double val = 1.0 / position.size();
+    fill(position.begin(), position.end(), val);
+  }
+
+  for (double& p : position) {
+    p /= sum;
+  }
+}
 #endif

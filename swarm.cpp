@@ -35,7 +35,8 @@ Swarm::Swarm(int d, int p, double w, double c1, double c2, vector< function<doub
   seed = mt19937(time(nullptr));
   swarm.reserve(p);
   for (int i = 0; i < p; i++) {
-    swarm.emplace_back(d, -10.0, 10.0, seed, [this](const vector<double>& pos) { return fitness(pos); });
+    /* search space is 0 to 1 */
+    swarm.emplace_back(d, 0.0, 1.0, seed, [this](const vector<double>& pos) { return fitness(pos); });
   }
   updateFront();
 }
@@ -55,6 +56,7 @@ void Swarm::timeStep() {
     vector<double> g_best = closestFrontier(swarm[i].position);
     swarm[i].updateVelocity(w, c1, c2, g_best, seed);
     swarm[i].updatePosition();
+    swarm[i].normaliseWeight();
     updateParticleBest(swarm[i]);
   }
 
